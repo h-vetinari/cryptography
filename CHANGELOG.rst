@@ -17,6 +17,9 @@ Changelog
 * Deprecated OpenSSL 1.1.0 support. OpenSSL 1.1.0 is no longer supported by
   the OpenSSL project. Support for compiling with OpenSSL 1.1.0 will be
   removed in a future release.
+* We no longer ship ``manylinux2010`` wheels. Users should upgrade to the
+  latest ``pip`` to ensure this doesn't cause issues downloading wheels on
+  their platform.
 * Added limited support for distinguished names containing a bit string.
 * We now ship ``universal2`` wheels on macOS, which contain both ``arm64``
   and ``x86_64`` architectures. Users on macOS should upgrade to the latest
