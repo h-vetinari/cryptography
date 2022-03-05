@@ -108,10 +108,25 @@ pub(crate) fn encode_name_entry<'p>(
 
     let attr_type = py_name_entry.getattr("_type")?;
     let tag = attr_type.getattr("value")?.extract::<u8>()?;
+<<<<<<< HEAD
     let encoding = if attr_type == asn1_type.getattr("BMPString")? {
         "utf_16_be"
     } else if attr_type == asn1_type.getattr("UniversalString")? {
         "utf_32_be"
+=======
+    let value: &[u8] = if !attr_type.is(asn1_type.getattr("BitString")?) {
+        let encoding = if attr_type.is(asn1_type.getattr("BMPString")?) {
+            "utf_16_be"
+        } else if attr_type.is(asn1_type.getattr("UniversalString")?) {
+            "utf_32_be"
+        } else {
+            "utf8"
+        };
+        py_name_entry
+            .getattr("value")?
+            .call_method1("encode", (encoding,))?
+            .extract()?
+>>>>>>> 8a481326 (Upgrade to pyo3 0.16)
     } else {
         "utf8"
     };
@@ -226,18 +241,18 @@ pub(crate) fn encode_general_name<'a>(
     let gn_module = py.import("cryptography.x509.general_name")?;
     let gn_type = gn.get_type().as_ref();
     let gn_value = gn.getattr("value")?;
-    if gn_type == gn_module.getattr("DNSName")? {
+    if gn_type.is(gn_module.getattr("DNSName")?) {
         Ok(GeneralName::DNSName(UnvalidatedIA5String(
             gn_value.extract::<&str>()?,
         )))
-    } else if gn_type == gn_module.getattr("RFC822Name")? {
+    } else if gn_type.is(gn_module.getattr("RFC822Name")?) {
         Ok(GeneralName::RFC822Name(UnvalidatedIA5String(
             gn_value.extract::<&str>()?,
         )))
-    } else if gn_type == gn_module.getattr("DirectoryName")? {
+    } else if gn_type.is(gn_module.getattr("DirectoryName")?) {
         let name = encode_name(py, gn_value)?;
         Ok(GeneralName::DirectoryName(name))
-    } else if gn_type == gn_module.getattr("OtherName")? {
+    } else if gn_type.is(gn_module.getattr("OtherName")?) {
         Ok(GeneralName::OtherName(OtherName {
             type_id: asn1::ObjectIdentifier::from_string(
                 gn.getattr("type_id")?
@@ -247,19 +262,24 @@ pub(crate) fn encode_general_name<'a>(
             .unwrap(),
             value: asn1::parse_single(gn_value.extract::<&[u8]>()?)?,
         }))
-    } else if gn_type == gn_module.getattr("UniformResourceIdentifier")? {
+    } else if gn_type.is(gn_module.getattr("UniformResourceIdentifier")?) {
         Ok(GeneralName::UniformResourceIdentifier(
             UnvalidatedIA5String(gn_value.extract::<&str>()?),
         ))
-    } else if gn_type == gn_module.getattr("IPAddress")? {
+    } else if gn_type.is(gn_module.getattr("IPAddress")?) {
         Ok(GeneralName::IPAddress(
             gn.call_method0("_packed")?.extract::<&[u8]>()?,
         ))
+<<<<<<< HEAD
     } else if gn_type == gn_module.getattr("RegisteredID")? {
         let oid = asn1::ObjectIdentifier::from_string(
             gn_value.getattr("dotted_string")?.extract::<&str>()?,
         )
         .unwrap();
+=======
+    } else if gn_type.is(gn_module.getattr("RegisteredID")?) {
+        let oid = py_oid_to_oid(gn_value)?;
+>>>>>>> 8a481326 (Upgrade to pyo3 0.16)
         Ok(GeneralName::RegisteredID(oid))
     } else {
         Err(PyAsn1Error::from(pyo3::exceptions::PyValueError::new_err(
@@ -458,7 +478,7 @@ pub(crate) fn parse_general_name(
                 .to_object(py)
         }
         _ => {
-            return Err(PyAsn1Error::from(pyo3::PyErr::from_instance(
+            return Err(PyAsn1Error::from(pyo3::PyErr::from_value(
                 x509_module.call_method1(
                     "UnsupportedGeneralNameType",
                     ("x400Address/EDIPartyName are not supported types",),
@@ -556,7 +576,7 @@ pub(crate) fn parse_and_cache_extensions<
                 x509_module.call_method1("ObjectIdentifier", (raw_ext.extn_id.to_string(),))?;
 
             if seen_oids.contains(&raw_ext.extn_id) {
-                return Err(pyo3::PyErr::from_instance(x509_module.call_method1(
+                return Err(pyo3::PyErr::from_value(x509_module.call_method1(
                     "DuplicateExtension",
                     (
                         format!("Duplicate {} extension found", raw_ext.extn_id),
@@ -608,7 +628,7 @@ pub(crate) fn encode_extensions<
         .unwrap();
 
         let ext_val = py_ext.getattr("value")?;
-        if unrecognized_extension_type.is_instance(ext_val)? {
+        if ext_val.is_instance(unrecognized_extension_type)? {
             exts.push(Extension {
                 extn_id: oid,
                 critical: py_ext.getattr("critical")?.extract()?,

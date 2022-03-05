@@ -90,8 +90,8 @@ struct CertificateSigningRequest {
     cached_extensions: Option<pyo3::PyObject>,
 }
 
-#[pyo3::prelude::pyproto]
-impl pyo3::basic::PyObjectProtocol for CertificateSigningRequest {
+#[pyo3::prelude::pymethods]
+impl CertificateSigningRequest {
     fn __hash__(&self) -> u64 {
         let mut hasher = DefaultHasher::new();
         self.raw.borrow_data().hash(&mut hasher);
@@ -100,7 +100,7 @@ impl pyo3::basic::PyObjectProtocol for CertificateSigningRequest {
 
     fn __richcmp__(
         &self,
-        other: pyo3::PyRef<CertificateSigningRequest>,
+        other: pyo3::PyRef<'_, CertificateSigningRequest>,
         op: pyo3::basic::CompareOp,
     ) -> pyo3::PyResult<bool> {
         match op {
@@ -111,10 +111,7 @@ impl pyo3::basic::PyObjectProtocol for CertificateSigningRequest {
             )),
         }
     }
-}
 
-#[pyo3::prelude::pymethods]
-impl CertificateSigningRequest {
     fn public_key<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<&'p pyo3::PyAny> {
         // This makes an unnecessary copy. It'd be nice to get rid of it.
         let serialized = pyo3::types::PyBytes::new(
@@ -159,7 +156,7 @@ impl CertificateSigningRequest {
         let hash_alg = sig_oids_to_hash.get_item(self.signature_algorithm_oid(py)?);
         match hash_alg {
             Ok(data) => Ok(data),
-            Err(_) => Err(PyAsn1Error::from(pyo3::PyErr::from_instance(
+            Err(_) => Err(PyAsn1Error::from(pyo3::PyErr::from_value(
                 py.import("cryptography.exceptions")?.call_method1(
                     "UnsupportedAlgorithm",
                     (format!(
@@ -189,9 +186,9 @@ impl CertificateSigningRequest {
             .getattr("Encoding")?;
 
         let result = asn1::write_single(self.raw.borrow_value());
-        if encoding == encoding_class.getattr("DER")? {
+        if encoding.is(encoding_class.getattr("DER")?) {
             Ok(pyo3::types::PyBytes::new(py, &result))
-        } else if encoding == encoding_class.getattr("PEM")? {
+        } else if encoding.is(encoding_class.getattr("PEM")?) {
             let pem = pem::encode_config(
                 &pem::Pem {
                     tag: "CERTIFICATE REQUEST".to_string(),
@@ -252,7 +249,7 @@ impl CertificateSigningRequest {
                 }
             }
         }
-        Err(pyo3::PyErr::from_instance(
+        Err(pyo3::PyErr::from_value(
             py.import("cryptography.x509")?.call_method1(
                 "AttributeNotFound",
                 (format!("No {} attribute was found", oid_str), oid),
