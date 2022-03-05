@@ -51,15 +51,15 @@ fn identify_key_type(py: pyo3::Python<'_>, private_key: &pyo3::PyAny) -> pyo3::P
         .getattr("Ed448PrivateKey")?
         .extract()?;
 
-    if rsa_private_key.is_instance(private_key)? {
+    if private_key.is_instance(rsa_private_key)? {
         Ok(KeyType::Rsa)
-    } else if dsa_key_type.is_instance(private_key)? {
+    } else if private_key.is_instance(dsa_key_type)? {
         Ok(KeyType::Dsa)
-    } else if ec_key_type.is_instance(private_key)? {
+    } else if private_key.is_instance(ec_key_type)? {
         Ok(KeyType::Ec)
-    } else if ed25519_key_type.is_instance(private_key)? {
+    } else if private_key.is_instance(ed25519_key_type)? {
         Ok(KeyType::Ed25519)
-    } else if ed448_key_type.is_instance(private_key)? {
+    } else if private_key.is_instance(ed448_key_type)? {
         Ok(KeyType::Ed448)
     } else {
         Err(pyo3::exceptions::PyTypeError::new_err(
@@ -80,7 +80,7 @@ fn identify_hash_type(
         .import("cryptography.hazmat.primitives.hashes")?
         .getattr("HashAlgorithm")?
         .extract()?;
-    if !hash_algorithm_type.is_instance(hash_algorithm)? {
+    if !hash_algorithm.is_instance(hash_algorithm_type)? {
         return Err(pyo3::exceptions::PyTypeError::new_err(
             "Algorithm must be a registered hash algorithm.",
         ));

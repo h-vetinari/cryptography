@@ -177,7 +177,7 @@ impl OCSPResponse {
                     "Signature algorithm OID: {} not recognized",
                     self.requires_successful_response()?.signature_algorithm.oid
                 );
-                Err(PyAsn1Error::from(pyo3::PyErr::from_instance(
+                Err(PyAsn1Error::from(pyo3::PyErr::from_value(
                     py.import("cryptography.exceptions")?
                         .call_method1("UnsupportedAlgorithm", (exc_messsage,))?,
                 )))
@@ -401,7 +401,7 @@ impl OCSPResponse {
             .import("cryptography.hazmat.primitives.serialization")?
             .getattr("Encoding")?
             .getattr("DER")?;
-        if encoding != der {
+        if !encoding.is(der) {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "The only allowed encoding value is Encoding.DER",
             ));
@@ -546,9 +546,9 @@ fn create_ocsp_basic_response<'p>(
         builder.getattr("_responder_id")?.extract()?;
 
     let py_cert_status = py_single_resp.getattr("_cert_status")?;
-    let cert_status = if py_cert_status == ocsp_mod.getattr("OCSPCertStatus")?.getattr("GOOD")? {
+    let cert_status = if py_cert_status.is(ocsp_mod.getattr("OCSPCertStatus")?.getattr("GOOD")?) {
         CertStatus::Good(())
-    } else if py_cert_status == ocsp_mod.getattr("OCSPCertStatus")?.getattr("UNKNOWN")? {
+    } else if py_cert_status.is(ocsp_mod.getattr("OCSPCertStatus")?.getattr("UNKNOWN")?) {
         CertStatus::Unknown(())
     } else {
         let revocation_reason = if !py_single_resp.getattr("_revocation_reason")?.is_none() {
@@ -588,7 +588,7 @@ fn create_ocsp_basic_response<'p>(
 
     let borrowed_cert = responder_cert.borrow();
     let responder_id =
-        if responder_encoding == ocsp_mod.getattr("OCSPResponderEncoding")?.getattr("HASH")? {
+        if responder_encoding.is(ocsp_mod.getattr("OCSPResponderEncoding")?.getattr("HASH")?) {
             let sha1 = py
                 .import("cryptography.hazmat.primitives.hashes")?
                 .getattr("SHA1")?

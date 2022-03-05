@@ -59,6 +59,26 @@ pub(crate) struct Sct {
 
 #[pyo3::prelude::pymethods]
 impl Sct {
+    fn __richcmp__(
+        &self,
+        other: pyo3::PyRef<'_, Sct>,
+        op: pyo3::basic::CompareOp,
+    ) -> pyo3::PyResult<bool> {
+        match op {
+            pyo3::basic::CompareOp::Eq => Ok(self.sct_data == other.sct_data),
+            pyo3::basic::CompareOp::Ne => Ok(self.sct_data != other.sct_data),
+            _ => Err(pyo3::exceptions::PyTypeError::new_err(
+                "SCTs cannot be ordered",
+            )),
+        }
+    }
+
+    fn __hash__(&self) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        self.sct_data.hash(&mut hasher);
+        hasher.finish()
+    }
+
     #[getter]
     fn version<'p>(&self, py: pyo3::Python<'p>) -> pyo3::PyResult<&'p pyo3::PyAny> {
         py.import("cryptography.x509.certificate_transparency")?
@@ -93,29 +113,6 @@ impl Sct {
             LogEntryType::PreCertificate => "PRE_CERTIFICATE",
         };
         et_class.getattr(attr_name)
-    }
-}
-
-#[pyo3::prelude::pyproto]
-impl pyo3::PyObjectProtocol for Sct {
-    fn __richcmp__(
-        &self,
-        other: pyo3::PyRef<Sct>,
-        op: pyo3::basic::CompareOp,
-    ) -> pyo3::PyResult<bool> {
-        match op {
-            pyo3::basic::CompareOp::Eq => Ok(self.sct_data == other.sct_data),
-            pyo3::basic::CompareOp::Ne => Ok(self.sct_data != other.sct_data),
-            _ => Err(pyo3::exceptions::PyTypeError::new_err(
-                "SCTs cannot be ordered",
-            )),
-        }
-    }
-
-    fn __hash__(&self) -> u64 {
-        let mut hasher = DefaultHasher::new();
-        self.sct_data.hash(&mut hasher);
-        hasher.finish()
     }
 }
 
