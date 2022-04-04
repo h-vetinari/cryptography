@@ -130,15 +130,13 @@ jobs:
       fail-fast: false
       matrix:
         IMAGE:
+          - {IMAGE: "rhel8", TOXENV: "py36"}
+          - {IMAGE: "rhel8-fips", TOXENV: "py36", FIPS: true}
           - {IMAGE: "buster", TOXENV: "py37"}
           - {IMAGE: "bullseye", TOXENV: "py39"}
           - {IMAGE: "bookworm", TOXENV: "py39"}
-<<<<<<< HEAD
           - {IMAGE: "sid", TOXENV: "py39"}
           - {IMAGE: "ubuntu-bionic", TOXENV: "py36"}
-=======
-          - {IMAGE: "sid", TOXENV: "py310"}
->>>>>>> 8a481326 (Upgrade to pyo3 0.16)
           - {IMAGE: "ubuntu-focal", TOXENV: "py38"}
           - {IMAGE: "ubuntu-rolling", TOXENV: "py39"}
           - {IMAGE: "fedora", TOXENV: "py310"}
@@ -185,16 +183,10 @@ jobs:
         PYTHON:
           - {VERSION: "3.9", TOXENV: "py39"}
         RUST:
-<<<<<<< HEAD
           # Cover MSRV (and likely next MSRV) and in-dev versions
           - 1.41.0
           - 1.45.0
           - beta
-=======
-          # Cover MSRV. In-dev versions are below in the linux-rust-coverage
-          # section.
-          - 1.48.0
->>>>>>> 8a481326 (Upgrade to pyo3 0.16)
     name: "${{ matrix.PYTHON.TOXENV }} with Rust ${{ matrix.RUST }}"
     timeout-minutes: 15
     steps:
@@ -332,7 +324,7 @@ jobs:
       fail-fast: false
       matrix:
         PYTHON:
-          - {VERSION: "3.7", TOXENV: "py37", EXTRA_CFLAGS: ""}
+          - {VERSION: "3.6", TOXENV: "py36", EXTRA_CFLAGS: ""}
           - {VERSION: "3.10", TOXENV: "py310", EXTRA_CFLAGS: "-DUSE_OSRANDOM_RNG_FOR_TESTING"}
         RUST:
           - stable
@@ -400,7 +392,7 @@ jobs:
           - {ARCH: 'x86', WINDOWS: 'win32', RUST_TRIPLE: 'i686-pc-windows-msvc'}
           - {ARCH: 'x64', WINDOWS: 'win64', RUST_TRIPLE: 'x86_64-pc-windows-msvc'}
         PYTHON:
-          - {VERSION: "3.7", TOXENV: "py37", CL_FLAGS: ""}
+          - {VERSION: "3.6", TOXENV: "py36", CL_FLAGS: ""}
           - {VERSION: "3.10", TOXENV: "py310", CL_FLAGS: "/D USE_OSRANDOM_RNG_FOR_TESTING"}
         RUST:
           - stable

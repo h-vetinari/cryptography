@@ -108,25 +108,10 @@ pub(crate) fn encode_name_entry<'p>(
 
     let attr_type = py_name_entry.getattr("_type")?;
     let tag = attr_type.getattr("value")?.extract::<u8>()?;
-<<<<<<< HEAD
-    let encoding = if attr_type == asn1_type.getattr("BMPString")? {
+    let encoding = if attr_type.is(asn1_type.getattr("BMPString")?) {
         "utf_16_be"
-    } else if attr_type == asn1_type.getattr("UniversalString")? {
+    } else if attr_type.is(asn1_type.getattr("UniversalString")?) {
         "utf_32_be"
-=======
-    let value: &[u8] = if !attr_type.is(asn1_type.getattr("BitString")?) {
-        let encoding = if attr_type.is(asn1_type.getattr("BMPString")?) {
-            "utf_16_be"
-        } else if attr_type.is(asn1_type.getattr("UniversalString")?) {
-            "utf_32_be"
-        } else {
-            "utf8"
-        };
-        py_name_entry
-            .getattr("value")?
-            .call_method1("encode", (encoding,))?
-            .extract()?
->>>>>>> 8a481326 (Upgrade to pyo3 0.16)
     } else {
         "utf8"
     };
@@ -270,16 +255,11 @@ pub(crate) fn encode_general_name<'a>(
         Ok(GeneralName::IPAddress(
             gn.call_method0("_packed")?.extract::<&[u8]>()?,
         ))
-<<<<<<< HEAD
-    } else if gn_type == gn_module.getattr("RegisteredID")? {
+    } else if gn_type.is(gn_module.getattr("RegisteredID")?) {
         let oid = asn1::ObjectIdentifier::from_string(
             gn_value.getattr("dotted_string")?.extract::<&str>()?,
         )
         .unwrap();
-=======
-    } else if gn_type.is(gn_module.getattr("RegisteredID")?) {
-        let oid = py_oid_to_oid(gn_value)?;
->>>>>>> 8a481326 (Upgrade to pyo3 0.16)
         Ok(GeneralName::RegisteredID(oid))
     } else {
         Err(PyAsn1Error::from(pyo3::exceptions::PyValueError::new_err(
